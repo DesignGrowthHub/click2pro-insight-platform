@@ -6,7 +6,7 @@ import type {
 } from "@prisma/client";
 
 import { AssessmentDraftStatusBadges } from "@/components/admin/assessment-draft-status-badges";
-import { Button } from "@/components/ui/button";
+import { Button, LinkButton } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SelectField } from "@/components/ui/select-field";
@@ -141,9 +141,9 @@ export default async function AssessmentDraftsPage({
               </CardHeader>
             </Card>
           </div>
-          <Button asChild size="lg">
-            <Link href="/admin/assessment-drafts/new">Create New Draft</Link>
-          </Button>
+          <LinkButton href="/admin/assessment-drafts/new" size="lg">
+            Create New Draft
+          </LinkButton>
         </div>
       </SectionShell>
 
@@ -286,9 +286,9 @@ export default async function AssessmentDraftsPage({
                     </div>
 
                     <div className="flex flex-wrap gap-3 xl:justify-end">
-                      <Button asChild size="md">
-                        <Link href={`/admin/assessment-drafts/${draft.id}`}>Open Draft</Link>
-                      </Button>
+                      <LinkButton href={`/admin/assessment-drafts/${draft.id}`} size="md">
+                        Open Draft
+                      </LinkButton>
                     </div>
                   </div>
                 </CardContent>
