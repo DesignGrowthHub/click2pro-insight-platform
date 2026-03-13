@@ -58,9 +58,7 @@ function resolveAuthoritativeOfferType(
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json()) as Partial<CheckoutSessionRequest> & {
-    checkoutEmail?: string | null;
-  };
+  const body = (await request.json()) as Partial<CheckoutSessionRequest>;
 
   if (!isValidPayload(body)) {
     return NextResponse.json(

@@ -275,6 +275,7 @@ export interface CheckoutSessionRequest {
   sourceTopic: string | null;
   includedAssessmentSlugs: string[];
   subscriptionPlanCode: string | null;
+  checkoutEmail?: string | null;
   returnToPath?: string | null;
 }
 
