@@ -7,6 +7,11 @@ import {
   getIssuePageBySlug,
   validateIssuePageAssessmentLink
 } from "@/lib/content/issue-pages";
+import { getAssessmentDefinitionBySlug } from "@/lib/assessments";
+import {
+  getPublishedAssessmentDefinitionBySlug,
+  getPublishedIssuePageBySlug
+} from "@/lib/server/services/published-assessments";
 
 type IssuePageRouteProps = {
   params: Promise<{
@@ -22,7 +27,8 @@ export async function generateMetadata({
   params
 }: IssuePageRouteProps): Promise<Metadata> {
   const { slug } = await params;
-  const issuePage = getIssuePageBySlug(slug);
+  const issuePage =
+    (await getPublishedIssuePageBySlug(slug)) ?? getIssuePageBySlug(slug);
 
   if (!issuePage) {
     return {
@@ -39,9 +45,22 @@ export async function generateMetadata({
 
 export default async function IssuePageRoute({ params }: IssuePageRouteProps) {
   const { slug } = await params;
-  const issuePage = getIssuePageBySlug(slug);
+  const publishedIssuePage = await getPublishedIssuePageBySlug(slug);
+  const seededIssuePage = getIssuePageBySlug(slug);
+  const issuePage = publishedIssuePage ?? seededIssuePage;
 
-  if (!issuePage || !validateIssuePageAssessmentLink(issuePage)) {
+  if (!issuePage) {
+    notFound();
+  }
+
+  const hasLinkedAssessment = publishedIssuePage
+    ? Boolean(
+        (await getPublishedAssessmentDefinitionBySlug(issuePage.linkedAssessmentSlug)) ??
+          getAssessmentDefinitionBySlug(issuePage.linkedAssessmentSlug)
+      )
+    : validateIssuePageAssessmentLink(issuePage);
+
+  if (!hasLinkedAssessment) {
     notFound();
   }
 

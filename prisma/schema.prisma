@@ -143,6 +143,41 @@ enum FileProcessingStatus {
   FAILED
 }
 
+enum AssessmentDraftGenerationStatus {
+  EMPTY
+  GENERATING
+  GENERATED
+  FAILED
+}
+
+enum AssessmentDraftReviewStatus {
+  DRAFT
+  UNDER_REVIEW
+  APPROVED
+  NEEDS_REVISION
+}
+
+enum AssessmentDraftPublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AssessmentDraftQuestionStatus {
+  DRAFT
+  REVIEWED
+  APPROVED
+  ARCHIVED
+}
+
+enum AssessmentDraftJobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
 model User {
   id                       String                 @id @default(cuid())
   email                    String                 @unique
@@ -175,6 +210,8 @@ model User {
   downloadRecords          DownloadRecord[]
   operationalEvents        OperationalEvent[]
   passwordResetTokens      PasswordResetToken[]
+  assessmentDraftsCreated  AssessmentDraft[]        @relation("AssessmentDraftCreatedBy")
+  assessmentDraftGenerationJobs AssessmentDraftGenerationJob[] @relation("AssessmentDraftGenerationRequestedBy")
 
   @@index([country])
   @@index([region])
@@ -555,4 +592,181 @@ model OperationalEvent {
   @@index([reportId, createdAt])
   @@index([purchaseId, createdAt])
   @@index([checkoutIntentId, createdAt])
+}
+
+model AssessmentDraft {
+  id                    String                          @id @default(cuid())
+  title                 String
+  slug                  String                          @unique
+  topicFamily           String?
+  targetAudience        String?
+  emotionalGoal         String?
+  requestedQuestionCount Int?
+  desiredTone           String?
+  requestedDimensions   Json?
+  previewEmphasisNotes  String?
+  reportEmphasisNotes   String?
+  sourcePrompt          String?
+  generationPrompt      String?
+  generationStatus      AssessmentDraftGenerationStatus @default(EMPTY)
+  reviewStatus          AssessmentDraftReviewStatus     @default(DRAFT)
+  publishStatus         AssessmentDraftPublishStatus    @default(DRAFT)
+  draftVersion          Int                             @default(1)
+  notes                 String?
+  createdByUserId       String?
+  createdAt             DateTime                        @default(now())
+  updatedAt             DateTime                        @updatedAt
+  createdByUser         User?                           @relation("AssessmentDraftCreatedBy", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  dimensions            AssessmentDraftDimension[]
+  questions             AssessmentDraftQuestion[]
+  issuePage             AssessmentDraftIssuePage?
+  previewBlueprint      AssessmentDraftPreviewBlueprint?
+  reportBlueprint       AssessmentDraftReportBlueprint?
+  generationJobs        AssessmentDraftGenerationJob[]
+
+  @@index([publishStatus, reviewStatus])
+  @@index([createdByUserId, createdAt])
+}
+
+model AssessmentDraftDimension {
+  id                  String           @id @default(cuid())
+  draftId             String
+  key                 String
+  label               String
+  description         String?
+  order               Int
+  scoringNotes        String?
+  interpretationNotes String?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  draft               AssessmentDraft  @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, key])
+  @@index([draftId, order])
+}
+
+model AssessmentDraftQuestion {
+  id               String                      @id @default(cuid())
+  draftId          String
+  dimensionKey     String?
+  questionType     String
+  prompt           String
+  optionSchema     Json?
+  scoringMapping   Json?
+  reverseScored    Boolean                     @default(false)
+  order            Int
+  status           AssessmentDraftQuestionStatus @default(DRAFT)
+  notes            String?
+  createdAt        DateTime                    @default(now())
+  updatedAt        DateTime                    @updatedAt
+  draft            AssessmentDraft             @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@index([draftId, order])
+  @@index([draftId, dimensionKey])
+  @@index([draftId, status])
+}
+
+model AssessmentDraftIssuePage {
+  id            String          @id @default(cuid())
+  draftId       String          @unique
+  issueSlug     String
+  pageTitle     String
+  headline      String
+  subheadline   String?
+  introCopy     String?
+  ctaCopy       String?
+  emotionalHook String?
+  faqItems      Json?
+  trustCopy     Json?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  draft         AssessmentDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+
+  @@unique([draftId, issueSlug])
+}
+
+model AssessmentDraftPreviewBlueprint {
+  id                     String          @id @default(cuid())
+  draftId                String          @unique
+  previewTitle           String?
+  summaryFraming         String?
+  strongestSignalLabels  Json?
+  graphFraming           String?
+  whyThisMatters         String?
+  whatOpensInFullReport  String?
+  pricingFraming         String?
+  urgencyNotes           String?
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+  draft                  AssessmentDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+}
+
+model AssessmentDraftReportBlueprint {
+  id                      String          @id @default(cuid())
+  draftId                 String          @unique
+  executiveSummaryFraming String?
+  sectionOrder            Json?
+  sectionIntents          Json?
+  sectionRoleBoundaries   Json?
+  reflectionActionFraming String?
+  relatedInsightsLogic    String?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+  draft                   AssessmentDraft @relation(fields: [draftId], references: [id], onDelete: Cascade)
+}
+
+model AssessmentDraftGenerationJob {
+  id                String                  @id @default(cuid())
+  draftId           String
+  requestedByUserId String?
+  status            AssessmentDraftJobStatus @default(QUEUED)
+  model             String?
+  promptSnapshot    String?
+  metadata          Json?
+  errorMessage      String?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  draft             AssessmentDraft         @relation(fields: [draftId], references: [id], onDelete: Cascade)
+  requestedByUser   User?                   @relation("AssessmentDraftGenerationRequestedBy", fields: [requestedByUserId], references: [id], onDelete: SetNull)
+
+  @@index([draftId, createdAt])
+  @@index([status, createdAt])
+  @@index([requestedByUserId, createdAt])
+}
+
+model PublishedAssessment {
+  id                   String   @id @default(cuid())
+  sourceDraftId        String   @unique
+  slug                 String   @unique
+  title                String
+  topicFamily          String?
+  assessmentSummary    Json
+  assessmentDefinition Json
+  publishVersion       Int      @default(1)
+  publishedByUserId    String?
+  publishedAt          DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([slug])
+  @@index([publishedAt])
+}
+
+model PublishedIssuePage {
+  id                   String   @id @default(cuid())
+  sourceDraftId        String   @unique
+  issueSlug            String   @unique
+  linkedAssessmentSlug String
+  pageTitle            String
+  issuePageContent     Json
+  publishVersion       Int      @default(1)
+  publishedByUserId    String?
+  publishedAt          DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([issueSlug])
+  @@index([linkedAssessmentSlug])
 }

@@ -10,6 +10,7 @@ type RegionResolutionInput = {
   explicitRegionKey?: string | null;
   cookieRegionKey?: string | null;
   country?: string | null;
+  geoHeaderCountry?: string | null;
   region?: string | null;
   currency?: string | null;
   preferredPaymentProvider?: string | null;
@@ -80,6 +81,10 @@ export function resolveRegionContext(
 
   if (profileRegion) {
     return buildResolvedContext(profileRegion, "authenticated_profile");
+  }
+
+  if (matchesIndia(input.geoHeaderCountry)) {
+    return buildResolvedContext("india", "geo_header");
   }
 
   if (isRegionKey(input.cookieRegionKey)) {

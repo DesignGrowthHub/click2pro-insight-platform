@@ -17,8 +17,8 @@ export function ScaleQuestion({
   const lastOption = question.options[question.options.length - 1];
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 px-1">
         <p className="text-sm leading-6 text-muted">
           Move toward the response that feels closest.
         </p>
@@ -32,7 +32,7 @@ export function ScaleQuestion({
           </span>
         </div>
       </div>
-      <div className="grid gap-3.5">
+      <div className="grid gap-3">
         {question.options.map((option, index) => (
           <QuestionOptionCard
             key={option.id}

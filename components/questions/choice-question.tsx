@@ -19,7 +19,7 @@ export function ChoiceQuestion({
   return (
     <div
       className={cn(
-        "grid gap-3.5",
+        "grid gap-3",
         isForcedChoice ? "lg:grid-cols-2" : question.optionLayout === "grid" ? "sm:grid-cols-2" : "grid-cols-1"
       )}
     >

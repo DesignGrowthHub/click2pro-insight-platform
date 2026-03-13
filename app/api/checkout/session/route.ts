@@ -101,24 +101,27 @@ export async function POST(request: NextRequest) {
       ? normalizeEmail(body.checkoutEmail)
       : null;
 
+  const checkoutLogPayload = {
+    requestedRegion: body.regionKey,
+    resolvedRegion: resolvedRegionKey,
+    resolvedProvider: resolvedPaymentProvider,
+    regionSource: regionContext.source,
+    authoritativeOfferType,
+    authoritativeOfferId: authoritativeOffer?.id ?? null,
+    authenticated: Boolean(currentUser),
+    checkoutEmailProvided: Boolean(normalizedCheckoutEmail),
+    stripeKeyDetected: Boolean(stripeConfig.secretKey),
+    razorpayKeyDetected: Boolean(razorpayConfig.keyId && razorpayConfig.secretKey),
+    providerKeysDetected,
+    decision: currentUser
+      ? "persistent_checkout"
+      : providerKeysDetected
+        ? "guest_checkout"
+        : "provider_unavailable"
+  };
+
   if (process.env.NODE_ENV !== "production") {
-    console.info("[checkout-session]", {
-      requestedRegion: body.regionKey,
-      resolvedRegion: resolvedRegionKey,
-      resolvedProvider: resolvedPaymentProvider,
-      authoritativeOfferType,
-      authoritativeOfferId: authoritativeOffer?.id ?? null,
-      authenticated: Boolean(currentUser),
-      checkoutEmailProvided: Boolean(normalizedCheckoutEmail),
-      stripeKeyDetected: Boolean(stripeConfig.secretKey),
-      razorpayKeyDetected: Boolean(razorpayConfig.keyId && razorpayConfig.secretKey),
-      providerKeysDetected,
-      decision: currentUser
-        ? "persistent_checkout"
-        : providerKeysDetected
-          ? "guest_checkout"
-          : "demo_fallback"
-    });
+    console.info("[checkout-session]", checkoutLogPayload);
   }
 
   try {
@@ -163,15 +166,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(descriptor);
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[checkout-session:error]", {
-        requestedRegion: body.regionKey,
-        resolvedRegion: resolvedRegionKey,
-        resolvedProvider: resolvedPaymentProvider,
-        providerKeysDetected,
-        message: error instanceof Error ? error.message : "Secure checkout could not be started."
-      });
-    }
+    console.error("[checkout-session:error]", {
+      ...checkoutLogPayload,
+      message:
+        error instanceof Error ? error.message : "Secure checkout could not be started."
+    });
 
     return NextResponse.json(
       {

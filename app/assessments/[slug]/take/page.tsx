@@ -10,6 +10,7 @@ import {
 } from "@/lib/assessments";
 import { getCurrentUser } from "@/lib/auth/session";
 import { resolvePersistentAccessStateForAssessment } from "@/lib/commerce/server/access";
+import { getPublishedAssessmentDefinitionBySlug, getPublishedAssessmentsBySlugs } from "@/lib/server/services/published-assessments";
 import {
   buildAnonymousVisitorCookieValue,
   INSIGHT_ANONYMOUS_VISITOR_COOKIE
@@ -48,17 +49,29 @@ export default async function AssessmentTakePage({
 }: AssessmentTakePageProps) {
   const { slug } = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
-  const assessment = getAssessmentDefinitionBySlug(slug);
+  const assessment =
+    (await getPublishedAssessmentDefinitionBySlug(slug)) ??
+    getAssessmentDefinitionBySlug(slug);
 
   if (!assessment) {
     notFound();
   }
 
-  const relatedAssessments = getAssessmentsBySlugs(
-    assessmentDefinitions
-      .map((item) => item.slug)
-      .filter((assessmentSlug) => assessmentSlug !== assessment.slug)
-  );
+  const seededRelatedSlugs = assessment.relatedAssessments
+    .map((item) => item.slug)
+    .filter((assessmentSlug) => assessmentSlug !== "membership" && assessmentSlug !== assessment.slug);
+  const relatedAssessments = seededRelatedSlugs.length
+    ? await getPublishedAssessmentsBySlugs(seededRelatedSlugs).then((items) => {
+        const publishedBySlug = new Map(items.map((item) => [item.slug, item] as const));
+        return seededRelatedSlugs
+          .map((assessmentSlug) => publishedBySlug.get(assessmentSlug) ?? getAssessmentsBySlugs([assessmentSlug])[0])
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
+      })
+    : getAssessmentsBySlugs(
+        assessmentDefinitions
+          .map((item) => item.slug)
+          .filter((assessmentSlug) => assessmentSlug !== assessment.slug)
+      );
   const currentUser = await getCurrentUser();
   const persistentAccessState = currentUser
     ? await resolvePersistentAccessStateForAssessment(currentUser.id, assessment.slug)

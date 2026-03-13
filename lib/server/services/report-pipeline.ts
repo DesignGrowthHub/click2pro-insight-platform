@@ -5,7 +5,6 @@ import type {
   Prisma
 } from "@prisma/client";
 
-import { getAssessmentDefinitionBySlug } from "@/lib/assessments";
 import { getConfiguredAIReportProvider } from "@/lib/ai/reporting/provider-factory";
 import { prisma } from "@/lib/db/prisma";
 import {
@@ -24,6 +23,7 @@ import {
   saveCompletedAssessmentSession,
   updateAssessmentSessionById
 } from "@/lib/server/services/assessment-sessions";
+import { getRuntimeAssessmentDefinitionBySlug } from "@/lib/server/services/published-assessments";
 import { processQueuedAccountEmailDelivery } from "@/lib/server/services/report-deliveries";
 import { recordOperationalEvent } from "@/lib/server/services/operational-events";
 import { getOwnedReportBySlug, updateReportById } from "@/lib/server/services/reports";
@@ -173,7 +173,9 @@ async function resolveStoredSessionOutcome(
     return null;
   }
 
-  const assessment = getAssessmentDefinitionBySlug(session.assessmentSlug);
+  const assessment = await getRuntimeAssessmentDefinitionBySlug(
+    session.assessmentSlug
+  );
 
   if (!assessment) {
     return null;
@@ -437,7 +439,7 @@ export async function generateAndPersistPremiumReport(
     return serializeSavedReport(report);
   }
 
-  const assessment = getAssessmentDefinitionBySlug(report.assessmentSlug);
+  const assessment = await getRuntimeAssessmentDefinitionBySlug(report.assessmentSlug);
 
   if (!assessment) {
     await updateReportById(report.id, {
@@ -604,7 +606,7 @@ export async function getPersistedReportExperience(input: {
       return generateAndPersistPremiumReport(existingReport.id);
     }
 
-    const assessment = getAssessmentDefinitionBySlug(input.assessmentSlug);
+    const assessment = await getRuntimeAssessmentDefinitionBySlug(input.assessmentSlug);
 
     if (assessment) {
       const accessibleReportId = await createMembershipOrBundleReportIfNeeded(

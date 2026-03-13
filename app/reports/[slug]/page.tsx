@@ -15,6 +15,10 @@ import {
   buildProfileCompletionUrl,
   formatProfileContextLine
 } from "@/lib/profile/completion";
+import {
+  getPublishedAssessmentDefinitionBySlug,
+  getPublishedAssessmentsBySlugs
+} from "@/lib/server/services/published-assessments";
 import { buildDemoAssessmentResponses } from "@/lib/scoring/demo-scenarios";
 import {
   getUserDisplayName,
@@ -42,7 +46,9 @@ export default async function ReportPreviewPage({
 }: ReportPreviewPageProps) {
   const { slug } = await params;
   const resolvedSearchParams = (await searchParams) ?? {};
-  const assessmentDefinition = getAssessmentDefinitionBySlug(slug);
+  const assessmentDefinition =
+    (await getPublishedAssessmentDefinitionBySlug(slug)) ??
+    getAssessmentDefinitionBySlug(slug);
   const forceUnlockedPreview =
     process.env.NODE_ENV === "development" && resolvedSearchParams.devPreview === "1";
   const currentUser = forceUnlockedPreview ? null : await getCurrentUser();
@@ -75,11 +81,21 @@ export default async function ReportPreviewPage({
     );
   }
 
-  const relatedAssessments = getAssessmentsBySlugs(
-    assessments
-      .map((assessment) => assessment.slug)
-      .filter((assessmentSlug) => assessmentSlug !== assessmentDefinition.slug)
-  );
+  const relatedSlugs = assessmentDefinition.relatedAssessments
+    .map((item) => item.slug)
+    .filter((item) => item !== "membership" && item !== assessmentDefinition.slug);
+  const relatedAssessments = relatedSlugs.length
+    ? await getPublishedAssessmentsBySlugs(relatedSlugs).then((items) => {
+        const publishedBySlug = new Map(items.map((item) => [item.slug, item] as const));
+        return relatedSlugs
+          .map((assessmentSlug) => publishedBySlug.get(assessmentSlug) ?? getAssessmentsBySlugs([assessmentSlug])[0])
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
+      })
+    : getAssessmentsBySlugs(
+        assessments
+          .map((assessment) => assessment.slug)
+          .filter((assessmentSlug) => assessmentSlug !== assessmentDefinition.slug)
+      );
 
   if (
     assessmentDefinition.buildStatus !== "deep_seeded" ||

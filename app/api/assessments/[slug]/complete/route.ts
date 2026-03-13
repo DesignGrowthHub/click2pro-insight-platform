@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getAssessmentDefinitionBySlug } from "@/lib/assessments";
 import { getCurrentUser } from "@/lib/auth/session";
 import {
   buildAnonymousVisitorCookieAttributes,
@@ -8,6 +7,7 @@ import {
   buildAnonymousVisitorCookieValue,
   INSIGHT_ANONYMOUS_VISITOR_COOKIE
 } from "@/lib/server/anonymous-visitor";
+import { getRuntimeAssessmentDefinitionBySlug } from "@/lib/server/services/published-assessments";
 import { mergeAnonymousVisitorIntoUser } from "@/lib/server/services/anonymous-merge";
 import { persistCompletedAssessment } from "@/lib/server/services/report-pipeline";
 import type { AssessmentResponseMap } from "@/lib/scoring/assessment-scoring";
@@ -32,7 +32,7 @@ function isResponseMap(value: unknown): value is AssessmentResponseMap {
 
 export async function POST(request: NextRequest, context: RouteContext) {
   const { slug } = await context.params;
-  const assessment = getAssessmentDefinitionBySlug(slug);
+  const assessment = await getRuntimeAssessmentDefinitionBySlug(slug);
 
   if (!assessment) {
     return NextResponse.json(

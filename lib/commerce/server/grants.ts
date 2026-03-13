@@ -1,11 +1,12 @@
 import "server-only";
 
-import { assessments, getAssessmentDefinitionBySlug } from "@/lib/assessments";
+import { assessments } from "@/lib/assessments";
 import { getPersistentCommerceStateForUser } from "@/lib/commerce/server/library";
 import { toPrismaPaymentProvider } from "@/lib/commerce/server/mappers";
 import { prisma } from "@/lib/db/prisma";
 import type { ConfirmedPaymentDetails } from "@/lib/payments/types";
 import { generateAndPersistPremiumReport } from "@/lib/server/services/report-pipeline";
+import { getRuntimeAssessmentDefinitionBySlug } from "@/lib/server/services/published-assessments";
 import {
   getCheckoutIntentById,
   getCheckoutIntentForUser
@@ -206,7 +207,9 @@ async function materializeConfirmedCheckoutIntent(
 
   const metadata = parseIntentMetadata(resolvedIntent.metadata);
   const purchasedAt = confirmation?.paidAt ?? new Date();
-  const assessmentDefinition = getAssessmentDefinitionBySlug(resolvedIntent.assessmentSlug);
+  const assessmentDefinition = await getRuntimeAssessmentDefinitionBySlug(
+    resolvedIntent.assessmentSlug
+  );
   const paymentProvider = resolvePaymentProvider(resolvedIntent, confirmation);
   let createdReportId: string | null = null;
   let createdPurchaseId: string | null = null;

@@ -243,8 +243,8 @@ export function AssessmentFlowShell({
       {stage === "questions" && currentQuestion ? (
         <div className="assessment-session-stack preview-reveal">
           <Card variant="raised" className="assessment-mode-shell overflow-hidden">
-            <CardContent className="space-y-5 p-4 sm:p-5 lg:p-6">
-              <div className="assessment-progress-shell px-4 py-4 sm:px-5 sm:py-4">
+            <CardContent className="space-y-4 p-4 sm:p-5 lg:p-[1.375rem]">
+              <div className="assessment-progress-shell px-4 py-3.5 sm:px-5 sm:py-3.5">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
@@ -271,14 +271,14 @@ export function AssessmentFlowShell({
                   </div>
                 </div>
 
-                <div className="mt-3 assessment-progress-track">
+                <div className="mt-2.5 assessment-progress-track">
                   <div
                     className="assessment-progress-fill"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
 
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm leading-6 text-muted">
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 text-sm leading-6 text-muted">
                   <p className="min-w-0 flex-1">
                     {currentSection?.intent ??
                       "Move with your first honest reaction. The pattern becomes clearer one answer at a time."}
@@ -309,7 +309,7 @@ export function AssessmentFlowShell({
                   </p>
                 </div>
                 {currentSection ? (
-                  <p className="mt-2 reading-column-tight text-sm leading-6 text-muted">
+                  <p className="mt-1.5 reading-column-tight text-sm leading-6 text-muted">
                     {currentSection.description}
                   </p>
                 ) : null}
@@ -328,14 +328,14 @@ export function AssessmentFlowShell({
                 />
               </div>
 
-              <div className="assessment-nav-shell border-t border-white/8 pt-4">
-                <div className="flex flex-col gap-3">
+              <div className="assessment-nav-shell border-t border-white/8 pt-3">
+                <div className="flex flex-col gap-2.5">
                   <p className="text-sm leading-6 text-muted">
                     {selectedOptionId
                       ? "Response saved. Continue whenever you are ready."
                       : "Choose the response that feels closest to continue."}
                   </p>
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
                     <Button
                       variant="outline"
                       size="lg"

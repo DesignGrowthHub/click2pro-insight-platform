@@ -124,6 +124,7 @@ export type ReportSectionDefinition = {
   requiredDimensionKeys: string[];
   narrativeIntent: string;
   placeholderFocus: string[];
+  roleBoundary?: string | null;
 };
 
 export type PreviewSectionDefinition = {
@@ -140,6 +141,27 @@ export type ReportBlueprint = {
   previewSections: PreviewSectionDefinition[];
   sections: ReportSectionDefinition[];
   lockCtaLabel: string;
+  publishedContext?: PublishedReportBlueprintContext | null;
+};
+
+export type PublishedPreviewBlueprintContext = {
+  previewTitle: string | null;
+  openingReadFraming: string | null;
+  strongestSignalLabels: string[];
+  graphLabelFraming: string | null;
+  whyThisMatters: string | null;
+  whatOpensInFullReport: string | null;
+  pricingFraming: string | null;
+  urgencyNotes: string | null;
+};
+
+export type PublishedReportBlueprintContext = {
+  executiveSummaryFraming: string | null;
+  sectionOrder: string[];
+  sectionIntents: Record<string, string>;
+  sectionRoleBoundaries: Record<string, string>;
+  reflectionActionFraming: string | null;
+  relatedInsightsLogic: string | null;
 };
 
 export type AssessmentDefinition = {
@@ -168,6 +190,7 @@ export type AssessmentDefinition = {
   relatedAssessments: RelatedInsightRecommendation[];
   reportBlueprint: ReportBlueprint;
   subscriptionUpsellNote: string;
+  previewExperience?: PublishedPreviewBlueprintContext | null;
 };
 
 export type DimensionScore = {
@@ -381,6 +404,7 @@ export type AIReportInputPayload = {
   membershipContext: MembershipUpsellContext;
   recommendationContext: AIRecommendationContext;
   followUpBlueprint: SubscriptionFollowUpBlueprint;
+  publishedReportBlueprint: PublishedReportBlueprintContext | null;
   toneRequirements: string[];
   safetyInstructions: string[];
   safetyGuardrails: AIReportToneGuardrails;

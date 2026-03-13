@@ -96,37 +96,39 @@ export function IssuePageTemplate({ issuePage }: IssuePageTemplateProps) {
         <div />
       </SectionShell>
 
-      <SectionShell
-        title="Private reflection examples"
-        description="Anonymized reflection-style notes to help you recognize how this issue often feels from the inside."
-        className="py-6 sm:py-8 lg:py-9"
-        contentClassName={issueSectionWidth}
-      >
-        <div className="credibility-marquee-shell">
-          <div className="credibility-marquee-track">
-            {reflectionCards.map((item, index) => (
-              <Card
-                key={`${item.label}-${index}`}
-                className="min-h-[220px] w-[320px] shrink-0 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
-                aria-hidden={index >= issuePage.reflections.length}
-              >
-                <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/18 bg-primary/10 text-sm font-semibold tracking-[0.08em] text-primary">
-                        {item.initials}
-                      </span>
-                      <p className="text-sm font-medium text-foreground/88">{item.label}</p>
+      {issuePage.reflections.length > 0 ? (
+        <SectionShell
+          title="Private reflection examples"
+          description="Anonymized reflection-style notes to help you recognize how this issue often feels from the inside."
+          className="py-6 sm:py-8 lg:py-9"
+          contentClassName={issueSectionWidth}
+        >
+          <div className="credibility-marquee-shell">
+            <div className="credibility-marquee-track">
+              {reflectionCards.map((item, index) => (
+                <Card
+                  key={`${item.label}-${index}`}
+                  className="min-h-[220px] w-[320px] shrink-0 overflow-hidden border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] shadow-[0_18px_40px_rgba(2,6,23,0.18)]"
+                  aria-hidden={index >= issuePage.reflections.length}
+                >
+                  <CardContent className="flex h-full flex-col justify-between p-5 sm:p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-primary/18 bg-primary/10 text-sm font-semibold tracking-[0.08em] text-primary">
+                          {item.initials}
+                        </span>
+                        <p className="text-sm font-medium text-foreground/88">{item.label}</p>
+                      </div>
+                      <p className="text-sm leading-7 text-foreground/92">“{item.quote}”</p>
                     </div>
-                    <p className="text-sm leading-7 text-foreground/92">“{item.quote}”</p>
-                  </div>
-                  <p className="insight-label">Anonymized reflection</p>
-                </CardContent>
-              </Card>
-            ))}
+                    <p className="insight-label">Anonymized reflection</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-        </div>
-      </SectionShell>
+        </SectionShell>
+      ) : null}
 
       <SectionShell
         title={issuePage.clarifiesTitle}

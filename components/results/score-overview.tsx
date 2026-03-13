@@ -5,6 +5,9 @@ import type { AssessmentResultProfile } from "@/lib/types/assessment-domain";
 type ScoreOverviewProps = {
   resultProfile: AssessmentResultProfile;
   variant?: "preview" | "report";
+  badgeLabel?: string;
+  title?: string;
+  description?: string | null;
 };
 
 function toSignalLine(text: string) {
@@ -20,7 +23,10 @@ function toSignalLine(text: string) {
 
 export function ScoreOverview({
   resultProfile,
-  variant = "report"
+  variant = "report",
+  badgeLabel,
+  title,
+  description = null
 }: ScoreOverviewProps) {
   const topDimensions = [...resultProfile.dimensionScores]
     .sort((left, right) => right.normalizedScore - left.normalizedScore)
@@ -32,16 +38,20 @@ export function ScoreOverview({
       <CardHeader className="space-y-3">
         <div className="flex flex-wrap gap-2">
           <Badge variant="outline">
-            {isPreview ? "Top 3 signals" : "Strongest signals"}
+            {badgeLabel ?? (isPreview ? "Top 3 signals" : "Strongest signals")}
           </Badge>
         </div>
         <CardTitle className="text-[1.5rem]">
-          {isPreview
-            ? "The clearest measured signals in your responses"
-            : "Where the pattern is showing up most clearly"}
+          {title ??
+            (isPreview
+              ? "The clearest measured signals in your responses"
+              : "Where the pattern is showing up most clearly")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {description ? (
+          <p className="text-sm leading-7 text-muted">{description}</p>
+        ) : null}
         <div className="grid gap-3">
           {topDimensions.map((dimension) => (
             <div key={dimension.key} className="surface-block px-4 py-4 sm:px-5 sm:py-5">

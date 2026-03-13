@@ -69,13 +69,24 @@ type FallbackOutcome = {
   premiumReport: PremiumReport;
 };
 
-const reportChapterBlueprint = [
-  { anchor: "core-pattern", label: "Core Pattern" },
-  { anchor: "pressure-points", label: "Pressure Points" },
-  { anchor: "performance-tendencies", label: "Performance Tendencies" },
-  { anchor: "hidden-friction", label: "Hidden Friction" },
-  { anchor: "stabilizing-direction", label: "Stabilizing Signals" }
-] as const;
+function getChapterAnchor(sectionId: string, index: number) {
+  switch (sectionId) {
+    case "pattern-summary":
+      return "core-pattern";
+    case "what-responses-suggest":
+      return "pattern-interpretation";
+    case "emotional-drivers":
+      return "pressure-points";
+    case "daily-life-impact":
+      return "performance-tendencies";
+    case "blind-spots-or-tension-areas":
+      return "hidden-friction";
+    case "stability-suggestions":
+      return "stabilizing-direction";
+    default:
+      return `chapter-${index + 1}`;
+  }
+}
 
 function buildExecutiveSummaryCards(report: PremiumReport) {
   const summaryItems = [
@@ -100,8 +111,8 @@ function buildExecutiveInsightParagraphs(report: PremiumReport) {
 function buildReportChapters(report: PremiumReport) {
   return report.sections.slice(0, 5).map((section, index) => ({
     section,
-    anchor: reportChapterBlueprint[index]?.anchor ?? `chapter-${index + 1}`,
-    label: reportChapterBlueprint[index]?.label ?? section.title
+    anchor: getChapterAnchor(section.id, index),
+    label: section.title
   }));
 }
 
@@ -227,6 +238,13 @@ export function ReportExperience({
   const reflectionPrompt = resultProfile
     ? buildReflectionPrompt(resultProfile)
     : "";
+  const publishedReportContext = assessment.reportBlueprint.publishedContext ?? null;
+  const reflectionActionFraming =
+    publishedReportContext?.reflectionActionFraming ??
+    "One question to keep beside the report";
+  const relatedInsightsFraming =
+    publishedReportContext?.relatedInsightsLogic ??
+    "These suggestions stay anchored to the same scored pattern and are best read as follow-on context rather than required next steps.";
   const reportGeneratedAt =
     persistedExperience?.source === "saved_report"
       ? persistedExperience.generatedAt
@@ -622,7 +640,7 @@ export function ReportExperience({
                     <CardHeader className="space-y-3 pb-4">
                       <Badge variant="outline">Reflection prompt</Badge>
                       <CardTitle className="text-[1.38rem]">
-                        One question to keep beside the report
+                        {reflectionActionFraming}
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -691,7 +709,7 @@ export function ReportExperience({
                 <section id="related-insights" className="scroll-mt-24">
                   <RelatedInsightsPanel
                     title="If this report feels accurate, these are the next connected patterns worth understanding."
-                    description="These suggestions stay anchored to the same scored pattern and are best read as follow-on context rather than required next steps."
+                    description={relatedInsightsFraming}
                     assessments={relatedAssessments}
                     recommendations={premiumReport.relatedRecommendations}
                     membershipNote="If several connected themes matter, membership keeps them in one private library instead of splitting them into isolated purchases."

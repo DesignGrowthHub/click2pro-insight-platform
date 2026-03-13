@@ -9,7 +9,8 @@ const adminLinks = [
   { href: "/admin", label: "Overview" },
   { href: "/admin/users", label: "Users" },
   { href: "/admin/purchases", label: "Purchases" },
-  { href: "/admin/analytics", label: "Analytics" }
+  { href: "/admin/analytics", label: "Analytics" },
+  { href: "/admin/assessment-drafts", label: "Assessment Drafts" }
 ] as const;
 
 export function AdminNav() {
@@ -18,7 +19,10 @@ export function AdminNav() {
   return (
     <nav className="flex flex-wrap gap-2">
       {adminLinks.map((item) => {
-        const isActive = pathname === item.href;
+        const isActive =
+          item.href === "/admin"
+            ? pathname === item.href
+            : pathname === item.href || pathname.startsWith(`${item.href}/`);
 
         return (
           <Link

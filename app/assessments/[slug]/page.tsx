@@ -14,6 +14,10 @@ import {
 } from "@/lib/assessments";
 import { getPricingLabels } from "@/lib/pricing";
 import { getServerCommerceRegionContext } from "@/lib/region/server";
+import {
+  getPublishedAssessmentBySlug,
+  getPublishedAssessmentsBySlugs
+} from "@/lib/server/services/published-assessments";
 
 type AssessmentDetailPageProps = {
   params: Promise<{
@@ -33,14 +37,23 @@ export default async function AssessmentDetailPage({
   const regionContext = await getServerCommerceRegionContext();
   const pricingLabels = getPricingLabels(regionContext.regionKey);
   const { slug } = await params;
-  const assessment = getAssessmentBySlug(slug);
-  const assessmentDefinition = getAssessmentDefinitionBySlug(slug);
+  const publishedAssessment = await getPublishedAssessmentBySlug(slug);
+  const assessment = publishedAssessment?.assessmentSummary ?? getAssessmentBySlug(slug);
+  const assessmentDefinition =
+    publishedAssessment?.assessmentDefinition ?? getAssessmentDefinitionBySlug(slug);
 
   if (!assessment || !assessmentDefinition) {
     notFound();
   }
 
-  const relatedAssessments = getAssessmentsBySlugs(assessment.recommendedSlugs);
+  const relatedAssessments = assessment.recommendedSlugs.length
+    ? await getPublishedAssessmentsBySlugs(assessment.recommendedSlugs).then((items) => {
+        const publishedBySlug = new Map(items.map((item) => [item.slug, item] as const));
+        return assessment.recommendedSlugs
+          .map((itemSlug) => publishedBySlug.get(itemSlug) ?? getAssessmentBySlug(itemSlug))
+          .filter((item): item is NonNullable<typeof item> => Boolean(item));
+      })
+    : getAssessmentsBySlugs(assessment.recommendedSlugs);
   const clarifiesItems = [
     ...assessment.outcomes,
     ...assessment.focusPoints

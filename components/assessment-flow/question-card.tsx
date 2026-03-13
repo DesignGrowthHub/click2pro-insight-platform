@@ -60,14 +60,14 @@ export function QuestionCard({
     );
 
   return (
-    <div className="space-y-4">
-      <div className="space-y-3">
+    <div className="space-y-3.5">
+      <div className="space-y-2.5">
         <div className="flex flex-wrap items-center gap-2">
           <span className="assessment-question-tag">
             {questionTypeLabel(question)}
           </span>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <h2 className="max-w-4xl text-[1.82rem] font-semibold leading-[1.06] tracking-[-0.04em] text-foreground sm:text-[2.16rem] lg:text-[2.32rem]">
             {question.prompt}
           </h2>

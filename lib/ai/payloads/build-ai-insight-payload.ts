@@ -383,6 +383,7 @@ export function buildAIInsightPayload(
       preparedBundleKeys: bundleSuggestion ? [bundleSuggestion.id] : []
     },
     followUpBlueprint,
+    publishedReportBlueprint: assessment.reportBlueprint.publishedContext ?? null,
     toneRequirements: [
       "Keep the tone calm, premium, and readable.",
       "Make the writing feel psychologically intelligent without becoming clinical.",

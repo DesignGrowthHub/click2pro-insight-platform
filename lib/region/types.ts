@@ -23,6 +23,7 @@ export type MembershipPlan = "monthly" | "annual";
 export type ExplanationSessionDuration = 30 | 60;
 export type RegionResolutionSource =
   | "authenticated_profile"
+  | "geo_header"
   | "cookie_preference"
   | "explicit_override"
   | "default";

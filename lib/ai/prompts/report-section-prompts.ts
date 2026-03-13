@@ -203,6 +203,39 @@ function buildGroundingEvidence(
   ].filter(Boolean);
 }
 
+function buildPublishedBlueprintNotes(
+  payload: AIReportInputPayload,
+  request: AIReportNarrativeRequest
+) {
+  const publishedBlueprint = payload.publishedReportBlueprint;
+
+  if (!publishedBlueprint) {
+    return [];
+  }
+
+  const sectionIntent = publishedBlueprint.sectionIntents[request.sectionId];
+  const roleBoundary = publishedBlueprint.sectionRoleBoundaries[request.sectionId];
+  const orderedSections = publishedBlueprint.sectionOrder.slice(0, 5);
+  const notes = [
+    publishedBlueprint.executiveSummaryFraming
+      ? `Executive summary framing: ${publishedBlueprint.executiveSummaryFraming}`
+      : null,
+    orderedSections.length
+      ? `Published chapter framing: ${orderedSections.join(" | ")}`
+      : null,
+    sectionIntent ? `Published section intent: ${sectionIntent}` : null,
+    roleBoundary ? `Published section role boundary: ${roleBoundary}` : null,
+    publishedBlueprint.reflectionActionFraming
+      ? `Reflection/action framing: ${publishedBlueprint.reflectionActionFraming}`
+      : null,
+    publishedBlueprint.relatedInsightsLogic
+      ? `Related insights framing: ${publishedBlueprint.relatedInsightsLogic}`
+      : null
+  ].filter(Boolean);
+
+  return notes;
+}
+
 function getSectionPlan(
   payload: AIReportInputPayload,
   sectionId: string
@@ -249,6 +282,7 @@ export function buildReportSectionPromptBundle(
   const roleBoundaries = getRoleBoundaries(plan?.template ?? "pattern_interpretation");
   const groundingSignals = buildGroundingSignals(payload, request);
   const groundingEvidence = buildGroundingEvidence(payload, request);
+  const publishedBlueprintNotes = buildPublishedBlueprintNotes(payload, request);
   const expectedStructuredFields =
     plan?.outputContract.requiredFields ?? [
       "synopsis",
@@ -286,6 +320,9 @@ export function buildReportSectionPromptBundle(
     ...groundingSignals.map((item) => `- ${item}`),
     "Grounding evidence to translate into meaning:",
     ...groundingEvidence.map((item) => `- ${item}`),
+    ...(publishedBlueprintNotes.length
+      ? ["Published blueprint guidance:", ...publishedBlueprintNotes.map((item) => `- ${item}`)]
+      : []),
     "Dimension snapshot:",
     formatDimensionSnapshot(payload),
     "Prompt focus:",

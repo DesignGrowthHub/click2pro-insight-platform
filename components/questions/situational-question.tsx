@@ -14,13 +14,13 @@ export function SituationalQuestion({
   onSelect
 }: SituationalQuestionProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="px-1">
         <p className="text-sm leading-6 text-muted">
           Choose the response that feels closest to how you actually react.
         </p>
       </div>
-      <div className="grid gap-3.5">
+      <div className="grid gap-3">
         {question.options.map((option, index) => (
           <QuestionOptionCard
             key={option.id}

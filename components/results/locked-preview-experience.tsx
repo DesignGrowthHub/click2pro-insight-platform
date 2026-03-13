@@ -34,6 +34,27 @@ function buildCostNarrative(resultProfile: AssessmentResultProfile) {
   );
 }
 
+function buildSignalFraming(
+  labels: string[]
+) {
+  if (labels.length === 0) {
+    return null;
+  }
+
+  if (labels.length === 1) {
+    return `The clearest signal is currently gathering around ${labels[0].toLowerCase()}.`;
+  }
+
+  if (labels.length === 2) {
+    return `The clearest signals are currently gathering around ${labels[0].toLowerCase()} and ${labels[1].toLowerCase()}.`;
+  }
+
+  return `The clearest signals are currently clustering around ${labels
+    .slice(0, 3)
+    .join(", ")
+    .toLowerCase()}.`;
+}
+
 function buildLockedThemes(report: PremiumReport | null) {
   if (!report) {
     return [
@@ -80,10 +101,20 @@ export function LockedPreviewExperience({
   hasHydrated = true
 }: LockedPreviewExperienceProps) {
   const previewHeadline = getPreviewHeadline(resultProfile);
+  const previewBlueprint = assessment.previewExperience ?? null;
   const costNarrative = buildCostNarrative(resultProfile);
   const lockedThemes = buildLockedThemes(premiumReport);
   const coherencePoints = buildCoherencePoints(resultProfile);
   const coherencePath = coherencePoints.map((point) => `${point.x},${point.y}`).join(" ");
+  const openingReadFraming = previewBlueprint?.openingReadFraming;
+  const strongestSignalFraming = buildSignalFraming(
+    previewBlueprint?.strongestSignalLabels ?? []
+  );
+  const graphLabelFraming = previewBlueprint?.graphLabelFraming;
+  const whyThisMatters = previewBlueprint?.whyThisMatters ?? costNarrative;
+  const whatOpensInFullReport =
+    previewBlueprint?.whatOpensInFullReport ??
+    "The deeper report moves from recognition into interpretation, tension points, and stabilizing direction.";
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 preview-reveal">
@@ -106,6 +137,11 @@ export function LockedPreviewExperience({
             <p className="mt-4 reading-column document-copy">
               {resultProfile.summaryNarrative}
             </p>
+            {openingReadFraming ? (
+              <p className="mt-5 text-sm leading-7 text-foreground/72">
+                {openingReadFraming}
+              </p>
+            ) : null}
             <p className="mt-5 text-sm leading-7 text-muted">
               Pattern coherence detected across the strongest scored signals in your responses.
             </p>
@@ -126,13 +162,21 @@ export function LockedPreviewExperience({
       </Card>
 
       <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <ScoreOverview resultProfile={resultProfile} variant="preview" />
+        <ScoreOverview
+          resultProfile={resultProfile}
+          variant="preview"
+          title={
+            previewBlueprint?.previewTitle ??
+            "The clearest measured signals in your responses"
+          }
+          description={strongestSignalFraming}
+        />
 
         <Card className="overflow-hidden">
           <CardHeader className="space-y-3">
             <Badge variant="outline">Measured proof</Badge>
             <CardTitle className="text-[1.45rem]">
-              The strongest signals are moving in the same direction
+              {graphLabelFraming ?? "The strongest signals are moving in the same direction"}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 pt-0">
@@ -174,7 +218,9 @@ export function LockedPreviewExperience({
                 ))}
               </svg>
               <p className="mt-4 text-sm leading-7 text-muted">
-                This preview is not showing a single isolated score. It is showing a pattern that stays visible across multiple response dimensions.
+                {graphLabelFraming
+                  ? `The measured view below supports the same pattern from a second angle, so the preview feels grounded rather than generic.`
+                  : "This preview is not showing a single isolated score. It is showing a pattern that stays visible across multiple response dimensions."}
               </p>
             </div>
           </CardContent>
@@ -184,23 +230,25 @@ export function LockedPreviewExperience({
       <Card className="overflow-hidden">
         <CardHeader className="space-y-3">
           <Badge variant="outline">Why this may matter</Badge>
-          <CardTitle className="text-[1.45rem]">
-            What this pattern may already be costing you
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 pt-0">
-          <p className="text-sm leading-7 text-muted">{costNarrative}</p>
-        </CardContent>
+        <CardTitle className="text-[1.45rem]">
+          What this pattern may already be costing you
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-0">
+          <p className="text-sm leading-7 text-muted">{whyThisMatters}</p>
+      </CardContent>
       </Card>
 
       <Card className="overflow-hidden">
         <CardHeader className="space-y-3">
           <Badge variant="outline">What opens in the full report</Badge>
-          <CardTitle className="text-[1.45rem]">
-            The deeper report moves from recognition into interpretation
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 pt-0 sm:grid-cols-2">
+        <CardTitle className="text-[1.45rem]">
+          The deeper report moves from recognition into interpretation
+        </CardTitle>
+      </CardHeader>
+        <CardContent className="space-y-4 pt-0">
+          <p className="text-sm leading-7 text-muted">{whatOpensInFullReport}</p>
+          <div className="grid gap-3 sm:grid-cols-2">
           {lockedThemes.map((item) => (
             <div
               key={item}
@@ -211,6 +259,7 @@ export function LockedPreviewExperience({
               </p>
             </div>
           ))}
+          </div>
         </CardContent>
       </Card>
 
