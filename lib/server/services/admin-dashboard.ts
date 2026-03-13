@@ -907,7 +907,9 @@ export async function getAdminPurchasesPageData(filters: {
         user: {
           select: {
             email: true,
-            fullName: true
+            fullName: true,
+            profileCompleted: true,
+            primaryConcern: true
           }
         }
       },

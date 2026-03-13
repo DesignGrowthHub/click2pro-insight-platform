@@ -43,13 +43,20 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     });
 
-    return new NextResponse(asset.buffer, {
+    return new NextResponse(
+      new Uint8Array(
+        asset.buffer.buffer,
+        asset.buffer.byteOffset,
+        asset.buffer.byteLength
+      ),
+      {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${asset.fileName}"`,
         "Cache-Control": "private, no-store"
       }
-    });
+      }
+    );
   } catch (error) {
     return NextResponse.json(
       {

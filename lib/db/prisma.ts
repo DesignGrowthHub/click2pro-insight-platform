@@ -2,7 +2,6 @@ import "server-only";
 
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
-import { Pool } from "pg";
 
 const FALLBACK_DATABASE_URL =
   "postgresql://postgres:postgres@localhost:5432/click2pro_insight?schema=public";
@@ -21,19 +20,17 @@ function getSchemaName(connectionString: string) {
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
-  prismaPool?: Pool;
 };
 
 const connectionString = getDatabaseUrl();
-const pool =
-  globalForPrisma.prismaPool ??
-  new Pool({
+const adapter = new PrismaPg(
+  {
     connectionString
-  });
-const adapter = new PrismaPg(pool, {
-  schema: getSchemaName(connectionString),
-  disposeExternalPool: false
-});
+  },
+  {
+    schema: getSchemaName(connectionString),
+  }
+);
 
 export const prisma =
   globalForPrisma.prisma ??
@@ -44,5 +41,4 @@ export const prisma =
 
 if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
-  globalForPrisma.prismaPool = pool;
 }

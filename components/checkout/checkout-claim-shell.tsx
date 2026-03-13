@@ -15,9 +15,9 @@ import { buildProfileCompletionUrl } from "@/lib/profile/completion";
 export function CheckoutClaimShell() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const intentId = searchParams.get("intent");
-  const mode = searchParams.get("mode");
-  const provider = searchParams.get("provider");
+  const intentId = searchParams?.get("intent");
+  const mode = searchParams?.get("mode");
+  const provider = searchParams?.get("provider");
   const { result, errorMessage } = useCheckoutCompletion(intentId, mode, provider);
   const [claimEmail, setClaimEmail] = useState("");
   const [claimFullName, setClaimFullName] = useState("");

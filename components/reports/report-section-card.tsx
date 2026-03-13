@@ -27,6 +27,10 @@ function normalizeBlockText(value: string) {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
+function hasText(value: string | undefined): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
 export function ReportSectionCard({
   section,
   unlocked = false,
@@ -56,7 +60,7 @@ export function ReportSectionCard({
     section.overview,
     ...narrativeBlocks.map((block) => block.content).filter(Boolean)
   ]
-    .filter(Boolean)
+    .filter(hasText)
     .filter((item, itemIndex, array) => {
       const normalized = normalizeBlockText(item);
       return array.findIndex((candidate) => normalizeBlockText(candidate) === normalized) === itemIndex;
@@ -64,7 +68,7 @@ export function ReportSectionCard({
     .slice(0, 2);
   const behavioralExamples = bulletBlocks
     .flatMap((block) => block.items ?? [])
-    .filter(Boolean)
+    .filter(hasText)
     .filter((item, itemIndex, array) => array.indexOf(item) === itemIndex)
     .slice(0, 4);
   const chapterHeading = chapterLabel ?? section.title;

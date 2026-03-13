@@ -16,8 +16,8 @@ import {
 export function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
-  const initialEmail = searchParams.get("email") ?? "";
+  const callbackUrl = searchParams?.get("callbackUrl") ?? "/dashboard";
+  const initialEmail = searchParams?.get("email") ?? "";
   const isReportContinuation = isReportContinuationPath(callbackUrl);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

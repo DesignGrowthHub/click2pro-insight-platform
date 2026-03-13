@@ -15,14 +15,15 @@ const adminLinks = [
 
 export function AdminNav() {
   const pathname = usePathname();
+  const safePathname = pathname ?? "";
 
   return (
     <nav className="flex flex-wrap gap-2">
       {adminLinks.map((item) => {
         const isActive =
           item.href === "/admin"
-            ? pathname === item.href
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            ? safePathname === item.href
+            : safePathname === item.href || safePathname.startsWith(`${item.href}/`);
 
         return (
           <Link

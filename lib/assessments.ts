@@ -27,6 +27,8 @@ export type Assessment = {
   descriptor: string;
   tagline: string;
   summary: string;
+  targetPainPoint: string;
+  previewPromise: string;
   questionCount: string;
   timeEstimate: string;
   privacy: string;
@@ -9644,6 +9646,8 @@ function toAssessmentSummary(assessment: AssessmentDefinition): Assessment {
     descriptor: assessment.subtitle,
     tagline: assessment.subtitle,
     summary: assessment.targetPainPoint,
+    targetPainPoint: assessment.targetPainPoint,
+    previewPromise: assessment.previewPromise,
     questionCount: `${assessment.questionCount} questions`,
     timeEstimate: assessment.estimatedTimeLabel,
     privacy: assessment.privacyNote,

@@ -28,9 +28,9 @@ type DraftRecord = NonNullable<Awaited<ReturnType<typeof getAssessmentDraftById>
 type DimensionSeed = {
   key: string;
   label: string;
-  description: string;
-  scoringNotes: string;
-  interpretationNotes: string;
+  description: string | null;
+  scoringNotes: string | null;
+  interpretationNotes: string | null;
 };
 
 type QuestionSeed = {
@@ -40,39 +40,39 @@ type QuestionSeed = {
   optionSchema: unknown;
   scoringMapping: unknown;
   reverseScored?: boolean;
-  notes?: string;
+  notes?: string | null;
 };
 
 type IssuePageSeed = {
   issueSlug: string;
   pageTitle: string;
   headline: string;
-  subheadline?: string;
-  introCopy?: string;
+  subheadline?: string | null;
+  introCopy?: string | null;
   ctaCopy?: string;
-  emotionalHook?: string;
+  emotionalHook?: string | null;
   faqItems?: string[];
   trustCopy?: string[];
 };
 
 type PreviewBlueprintSeed = {
-  previewTitle?: string;
-  summaryFraming?: string;
+  previewTitle?: string | null;
+  summaryFraming?: string | null;
   strongestSignalLabels?: string[];
-  graphFraming?: string;
-  whyThisMatters?: string;
-  whatOpensInFullReport?: string;
-  pricingFraming?: string;
-  urgencyNotes?: string;
+  graphFraming?: string | null;
+  whyThisMatters?: string | null;
+  whatOpensInFullReport?: string | null;
+  pricingFraming?: string | null;
+  urgencyNotes?: string | null;
 };
 
 type ReportBlueprintSeed = {
-  executiveSummaryFraming?: string;
+  executiveSummaryFraming?: string | null;
   sectionOrder?: string[];
-  sectionIntents?: Record<string, string>;
-  sectionRoleBoundaries?: Record<string, string | string[]>;
-  reflectionActionFraming?: string;
-  relatedInsightsLogic?: string;
+  sectionIntents?: Record<string, string> | null;
+  sectionRoleBoundaries?: Record<string, string | string[]> | null;
+  reflectionActionFraming?: string | null;
+  relatedInsightsLogic?: string | null;
 };
 
 type GeneratedDraftPayload = {

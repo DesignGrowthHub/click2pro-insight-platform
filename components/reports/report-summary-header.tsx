@@ -91,7 +91,7 @@ export function ReportSummaryHeader({
               {report.summaryLabel}
             </p>
             <p className="max-w-[72ch] text-[15px] leading-[1.82] text-foreground/78">
-              {report.summaryDescriptor}
+              {report.patternClusters[0]?.description ?? report.subtitle}
             </p>
           </div>
 

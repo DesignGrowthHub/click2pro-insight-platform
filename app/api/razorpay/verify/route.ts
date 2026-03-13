@@ -139,7 +139,7 @@ export async function POST(request: Request) {
   await recordOperationalEvent({
     eventType: "payment_confirmation",
     eventKey: intent.id,
-    status: "REQUIRES_ACTION",
+    status: "SUCCEEDED",
     userId: intent.userId,
     checkoutIntentId: intent.id,
     message:

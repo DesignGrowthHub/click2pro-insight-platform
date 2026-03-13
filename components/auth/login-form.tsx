@@ -16,10 +16,10 @@ import {
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
+  const callbackUrl = searchParams?.get("callbackUrl") ?? "/dashboard";
   const continuationUrl = ensureProfileCompletionCallback(callbackUrl);
-  const initialEmail = searchParams.get("email") ?? "";
-  const authError = searchParams.get("error");
+  const initialEmail = searchParams?.get("email") ?? "";
+  const authError = searchParams?.get("error");
   const isReportContinuation = isReportContinuationPath(callbackUrl);
   const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");

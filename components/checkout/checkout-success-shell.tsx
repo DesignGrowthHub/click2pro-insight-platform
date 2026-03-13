@@ -42,9 +42,9 @@ export function CheckoutSuccessShell() {
   const { membershipContent, pricingLabels, regionConfig } = useCommerceRegion();
   const membershipNarrative = membershipContent.membershipNarrative;
   const searchParams = useSearchParams();
-  const intentId = searchParams.get("intent");
-  const mode = searchParams.get("mode");
-  const provider = searchParams.get("provider");
+  const intentId = searchParams?.get("intent");
+  const mode = searchParams?.get("mode");
+  const provider = searchParams?.get("provider");
   const { result, errorMessage } = useCheckoutCompletion(intentId, mode, provider);
   const [isRoutingToClaim, setIsRoutingToClaim] = useState(false);
 

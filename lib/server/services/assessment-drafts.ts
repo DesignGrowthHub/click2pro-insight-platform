@@ -1,6 +1,6 @@
 import "server-only";
 
-import type {
+import {
   AssessmentDraftGenerationStatus,
   AssessmentDraftJobStatus,
   AssessmentDraftPublishStatus,

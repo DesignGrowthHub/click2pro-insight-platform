@@ -1,8 +1,8 @@
 import "server-only";
 
-import type { Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
-import type { Assessment } from "@/lib/assessments";
+import type { Assessment, ReportSectionState } from "@/lib/assessments";
 import { getAssessmentDefinitionBySlug } from "@/lib/assessments";
 import {
   getIssuePageBySlug,
@@ -21,7 +21,6 @@ import type {
   PublishedPreviewBlueprintContext,
   PublishedReportBlueprintContext,
   PreviewSectionDefinition,
-  ReportSectionState,
   ScoreBand,
   ScoreDimension
 } from "@/lib/types/assessment-domain";
@@ -40,6 +39,20 @@ type PublishAssessmentDraftInput = {
   draftId: string;
   publishedByUserId: string;
 };
+
+function isMissingPublishedSnapshotTableError(error: unknown) {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2021";
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("PublishedAssessment") ||
+    message.includes("PublishedIssuePage") ||
+    message.includes("publishedAssessment") ||
+    message.includes("publishedIssuePage")
+  );
+}
 
 const REPORT_BLUEPRINT_SECTION_SLOTS = [
   {
@@ -267,7 +280,7 @@ function buildOptionsForDraftQuestion(
       return {
         id: optionId,
         label,
-        description: cleanOptionalText(option.description),
+        description: cleanOptionalText(option.description) ?? undefined,
         value: typeof option.value === "number" ? option.value : index,
         dimensionWeights,
         contextMarkers: normalizeStringArray((option as { contextMarkers?: unknown }).contextMarkers)
@@ -605,6 +618,8 @@ function buildAssessmentSummaryFromDefinition(assessment: AssessmentDefinition):
     descriptor: assessment.subtitle,
     tagline: assessment.subtitle,
     summary: assessment.targetPainPoint,
+    targetPainPoint: assessment.targetPainPoint,
+    previewPromise: assessment.previewPromise,
     questionCount: `${assessment.questionCount} questions`,
     timeEstimate: assessment.estimatedTimeLabel,
     privacy: assessment.privacyNote,
@@ -1021,13 +1036,21 @@ export async function publishAssessmentDraft({
 }
 
 export async function getPublishedAssessmentBySlug(slug: string) {
-  const record = await prisma.publishedAssessment.findUnique({
-    where: {
-      slug
-    }
-  });
+  try {
+    const record = await prisma.publishedAssessment.findUnique({
+      where: {
+        slug
+      }
+    });
 
-  return parsePublishedAssessmentRecord(record);
+    return parsePublishedAssessmentRecord(record);
+  } catch (error) {
+    if (isMissingPublishedSnapshotTableError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 }
 
 export async function getPublishedAssessmentDefinitionBySlug(slug: string) {
@@ -1048,30 +1071,48 @@ export async function getPublishedAssessmentSummaryBySlug(slug: string) {
 }
 
 export async function getPublishedAssessmentsBySlugs(slugs: string[]) {
-  const records = await prisma.publishedAssessment.findMany({
-    where: {
-      slug: {
-        in: slugs
+  try {
+    const records = await prisma.publishedAssessment.findMany({
+      where: {
+        slug: {
+          in: slugs
+        }
       }
+    });
+
+    const bySlug = new Map(
+      records
+        .map((record) => parsePublishedAssessmentRecord(record))
+        .filter((item): item is NonNullable<typeof item> => Boolean(item))
+        .map((item) => [item.assessmentSummary.slug, item.assessmentSummary] as const)
+    );
+
+    return slugs
+      .map((slug) => bySlug.get(slug))
+      .filter((item): item is Assessment => Boolean(item));
+  } catch (error) {
+    if (isMissingPublishedSnapshotTableError(error)) {
+      return [];
     }
-  });
 
-  const bySlug = new Map(
-    records
-      .map((record) => parsePublishedAssessmentRecord(record))
-      .filter((item): item is NonNullable<typeof item> => Boolean(item))
-      .map((item) => [item.assessmentSummary.slug, item.assessmentSummary] as const)
-  );
-
-  return slugs.map((slug) => bySlug.get(slug)).filter((item): item is Assessment => Boolean(item));
+    throw error;
+  }
 }
 
 export async function getPublishedIssuePageBySlug(issueSlug: string) {
-  const record = await prisma.publishedIssuePage.findUnique({
-    where: {
-      issueSlug
-    }
-  });
+  try {
+    const record = await prisma.publishedIssuePage.findUnique({
+      where: {
+        issueSlug
+      }
+    });
 
-  return parsePublishedIssuePageRecord(record);
+    return parsePublishedIssuePageRecord(record);
+  } catch (error) {
+    if (isMissingPublishedSnapshotTableError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 }

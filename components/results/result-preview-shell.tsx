@@ -2,6 +2,7 @@
 
 import { RelatedInsightsPanel } from "@/components/recommendations/related-insights-panel";
 import { LockedPreviewExperience } from "@/components/results/locked-preview-experience";
+import { ScoreOverview } from "@/components/results/score-overview";
 import { SubscriptionUpsell } from "@/components/results/subscription-upsell";
 import { ReportSectionCard } from "@/components/reports/report-section-card";
 import { useCommerceRegion } from "@/components/region/commerce-region-provider";
@@ -9,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, LinkButton } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UnlockedReportState } from "@/components/unlock/unlocked-report-state";
+import { getPreviewHeadline } from "@/lib/assessment-engine/flow";
 import type { Assessment as AssessmentSummary } from "@/lib/assessments";
 import { useOwnedLibrary } from "@/lib/commerce/use-owned-library";
 import { getReportUnlockOfferSuite } from "@/lib/offers/report-offers";
@@ -78,6 +80,7 @@ export function ResultPreviewShell({
       ? serverCanAccessFullReport
       : (accessState?.canAccessFullReport ?? false);
   const recognitionCards = buildPreviewRecognition(resultProfile);
+  const previewHeadline = getPreviewHeadline(resultProfile);
   const hasActiveMembership = library.subscriptions.some(
     (subscription) =>
       subscription.status === "active" || subscription.status === "trialing"

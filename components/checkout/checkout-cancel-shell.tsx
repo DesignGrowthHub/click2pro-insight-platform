@@ -11,8 +11,8 @@ import type { CheckoutIntent } from "@/lib/commerce/types";
 
 export function CheckoutCancelShell() {
   const searchParams = useSearchParams();
-  const intentId = searchParams.get("intent");
-  const mode = searchParams.get("mode");
+  const intentId = searchParams?.get("intent");
+  const mode = searchParams?.get("mode");
   const [intent, setIntent] = useState<CheckoutIntent | null>(null);
 
   useEffect(() => {
