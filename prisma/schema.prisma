@@ -1,0 +1,558 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PaymentProvider {
+  STRIPE
+  RAZORPAY
+  MANUAL
+  UNKNOWN
+}
+
+enum PurchaseType {
+  SINGLE_REPORT
+  PREMIUM_REPORT
+  BUNDLE
+  MEMBERSHIP
+  EXPLANATION_SESSION
+}
+
+enum PurchaseStatus {
+  PENDING
+  REQUIRES_ACTION
+  PAID
+  FAILED
+  CANCELED
+  EXPIRED
+  REFUNDED
+}
+
+enum CheckoutIntentStatus {
+  PENDING
+  REDIRECT_READY
+  REQUIRES_ACTION
+  PAID
+  FAILED
+  CANCELED
+  EXPIRED
+}
+
+enum MembershipStatus {
+  INACTIVE
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+}
+
+enum AssessmentSessionStatus {
+  LANDED
+  STARTED
+  COMPLETED
+  PREVIEW_VIEWED
+  UNLOCK_CLICKED
+  PAID
+  ABANDONED
+}
+
+enum ReportStatus {
+  QUEUED
+  GENERATING
+  READY
+  FAILED
+  REQUIRES_RETRY
+  ARCHIVED
+}
+
+enum ReportTier {
+  STANDARD
+  PREMIUM
+}
+
+enum ReportAccessStatus {
+  PREVIEW_ONLY
+  OWNED
+  BUNDLE
+  MEMBERSHIP
+}
+
+enum BundleAccessStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+}
+
+enum ExplanationSessionStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ExplanationEntitlementStatus {
+  PENDING
+  GRANTED
+  READY_FOR_CONTACT
+  CONTACTED
+  SCHEDULED
+  COMPLETED
+  CANCELED
+  EXPIRED
+}
+
+enum OperationalEventLevel {
+  INFO
+  WARN
+  ERROR
+}
+
+enum OperationalEventStatus {
+  STARTED
+  SUCCEEDED
+  FAILED
+  RETRIED
+}
+
+enum EmailTargetType {
+  ACCOUNT_EMAIL
+  ALTERNATE_EMAIL
+}
+
+enum DeliveryStatus {
+  QUEUED
+  SENT
+  FAILED
+  BOUNCED
+  SKIPPED
+}
+
+enum FileProcessingStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+model User {
+  id                       String                 @id @default(cuid())
+  email                    String                 @unique
+  passwordHash             String
+  fullName                 String?
+  preferredName            String?
+  ageRange                 String?
+  country                  String?
+  region                   String?
+  occupationOrLifeStage    String?
+  primaryConcern           String?
+  profileCompleted         Boolean                @default(false)
+  profileCompletedAt       DateTime?
+  profileSkippedAt         DateTime?
+  currency                 String?                @default("USD")
+  preferredPaymentProvider PaymentProvider?
+  emailVerifiedAt          DateTime?
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+  assessmentSessions       AssessmentSession[]
+  checkoutIntents          CheckoutIntent[]
+  reports                  Report[]
+  purchases                Purchase[]
+  memberships              Membership[]
+  ownedBundles             OwnedBundle[]
+  explanationEntitlements  ExplanationEntitlement[]
+  explanationSessions      ExplanationSession[]
+  sourceAttributions       SourceAttribution[]
+  emailDeliveryRecords     EmailDeliveryRecord[]
+  downloadRecords          DownloadRecord[]
+  operationalEvents        OperationalEvent[]
+  passwordResetTokens      PasswordResetToken[]
+
+  @@index([country])
+  @@index([region])
+  @@index([profileCompleted])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([email, expiresAt])
+}
+
+model AssessmentSession {
+  id                  String                  @id @default(cuid())
+  userId              String?
+  anonymousVisitorId  String?
+  assessmentSlug      String
+  assessmentTitle     String?
+  topicKey            String?
+  sourceAttributionId String?
+  status              AssessmentSessionStatus @default(STARTED)
+  answers             Json
+  scoringPayload      Json?
+  resultProfile       Json?
+  previewPayload      Json?
+  startedAt           DateTime?
+  completedAt         DateTime?
+  paidAt              DateTime?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  user                User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  sourceAttribution   SourceAttribution?      @relation(fields: [sourceAttributionId], references: [id], onDelete: SetNull)
+  checkoutIntents     CheckoutIntent[]
+  reports             Report[]
+
+  @@index([userId, createdAt])
+  @@index([anonymousVisitorId, createdAt])
+  @@index([assessmentSlug, status])
+  @@index([sourceAttributionId])
+}
+
+model Report {
+  id                  String               @id @default(cuid())
+  userId              String
+  assessmentSessionId String?
+  sourcePurchaseId    String?
+  sourceAttributionId String?
+  assessmentSlug      String
+  topicKey            String
+  title               String
+  subtitle            String?
+  tier                ReportTier           @default(STANDARD)
+  status              ReportStatus         @default(QUEUED)
+  accessStatus        ReportAccessStatus   @default(PREVIEW_ONLY)
+  previewPayload      Json?
+  resultProfile       Json?
+  reportPayload       Json?
+  aiPayload           Json?
+  aiSections          Json?
+  failureReason       String?
+  pdfStatus           FileProcessingStatus @default(PENDING)
+  pdfFileUrl          String?
+  pdfStorageKey       String?
+  pdfFailureReason    String?
+  pdfGeneratedAt      DateTime?
+  emailStatus         DeliveryStatus?
+  lastEmailedAt       DateTime?
+  lastDownloadedAt    DateTime?
+  downloadCount       Int                  @default(0)
+  generatedAt         DateTime?
+  unlockedAt          DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentSession   AssessmentSession?   @relation(fields: [assessmentSessionId], references: [id], onDelete: SetNull)
+  sourcePurchase      Purchase?            @relation(fields: [sourcePurchaseId], references: [id], onDelete: SetNull)
+  sourceAttribution   SourceAttribution?   @relation(fields: [sourceAttributionId], references: [id], onDelete: SetNull)
+  explanationEntitlements ExplanationEntitlement[]
+  explanationSessions ExplanationSession[]
+  emailDeliveries     EmailDeliveryRecord[]
+  downloadRecords     DownloadRecord[]
+
+  @@index([userId, createdAt])
+  @@index([assessmentSlug, status])
+  @@index([sourcePurchaseId])
+  @@index([sourceAttributionId])
+}
+
+model CheckoutIntent {
+  id                      String               @id @default(cuid())
+  userId                  String
+  assessmentSessionId     String?
+  sourceAttributionId     String?
+  assessmentSlug          String
+  assessmentTitle         String?
+  topicKey                String?
+  regionKey               String
+  currency                String               @default("USD")
+  paymentProvider         PaymentProvider?
+  offerType               String
+  offerTitle              String
+  purchaseType            PurchaseType
+  amountCents             Int
+  checkoutMode            String               @default("payment")
+  providerSessionId       String?
+  providerOrderId         String?
+  providerPriceLookupKey  String?
+  successUrl              String?
+  cancelUrl               String?
+  status                  CheckoutIntentStatus @default(PENDING)
+  failureReason           String?
+  lastPaymentEventAt      DateTime?
+  paymentConfirmedAt      DateTime?
+  metadata                Json?
+  completedAt             DateTime?
+  canceledAt              DateTime?
+  expiresAt               DateTime?
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  user                    User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assessmentSession       AssessmentSession?   @relation(fields: [assessmentSessionId], references: [id], onDelete: SetNull)
+  sourceAttribution       SourceAttribution?   @relation(fields: [sourceAttributionId], references: [id], onDelete: SetNull)
+  purchase                Purchase?
+
+  @@index([userId, createdAt])
+  @@index([status, purchaseType])
+  @@index([assessmentSlug, status])
+  @@index([assessmentSessionId])
+  @@index([sourceAttributionId])
+  @@index([providerSessionId])
+  @@index([providerOrderId])
+}
+
+model Purchase {
+  id                         String           @id @default(cuid())
+  userId                     String
+  checkoutIntentId           String?          @unique
+  membershipId               String?
+  sourceAttributionId        String?
+  purchaseType               PurchaseType
+  status                     PurchaseStatus   @default(PENDING)
+  paymentProvider            PaymentProvider?
+  providerCheckoutSessionId  String?
+  providerOrderId            String?
+  providerPaymentId          String?
+  providerCustomerId         String?
+  providerSubscriptionId     String?
+  assessmentSlug             String?
+  topicKey                   String?
+  productReference           String?
+  title                      String?
+  currency                   String           @default("USD")
+  amountCents                Int
+  priceSnapshot              Json?
+  metadata                   Json?
+  purchasedAt                DateTime?
+  createdAt                  DateTime         @default(now())
+  updatedAt                  DateTime         @updatedAt
+  user                       User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  checkoutIntent             CheckoutIntent?  @relation(fields: [checkoutIntentId], references: [id], onDelete: SetNull)
+  membership                 Membership?      @relation(fields: [membershipId], references: [id], onDelete: SetNull)
+  sourceAttribution          SourceAttribution? @relation(fields: [sourceAttributionId], references: [id], onDelete: SetNull)
+  ownedBundle                OwnedBundle?
+  explanationEntitlement     ExplanationEntitlement?
+  reports                    Report[]
+
+  @@index([userId, createdAt])
+  @@index([status, purchaseType])
+  @@index([checkoutIntentId])
+  @@index([membershipId])
+  @@index([sourceAttributionId])
+  @@index([providerCheckoutSessionId])
+  @@index([providerOrderId])
+  @@index([providerPaymentId])
+}
+
+model Membership {
+  id                       String           @id @default(cuid())
+  userId                   String
+  planCode                 String
+  planLabel                String
+  status                   MembershipStatus @default(INACTIVE)
+  billingInterval          BillingInterval
+  paymentProvider          PaymentProvider?
+  currency                 String           @default("USD")
+  amountCents              Int
+  providerSubscriptionId   String?
+  providerCustomerId       String?
+  providerPlanReference    String?
+  unlockedAssessmentSlugs  Json?
+  benefitSnapshot          Json?
+  metadata                 Json?
+  startedAt                DateTime?
+  currentPeriodStart       DateTime?
+  currentPeriodEnd         DateTime?
+  renewsAt                 DateTime?
+  canceledAt               DateTime?
+  createdAt                DateTime         @default(now())
+  updatedAt                DateTime         @updatedAt
+  user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purchases                Purchase[]
+
+  @@index([userId, status])
+  @@index([planCode])
+}
+
+model OwnedBundle {
+  id                      String             @id @default(cuid())
+  userId                  String
+  sourcePurchaseId        String             @unique
+  primaryAssessmentSlug   String?
+  title                   String
+  description             String?
+  includedAssessmentSlugs Json
+  accessStatus            BundleAccessStatus @default(ACTIVE)
+  metadata                Json?
+  purchasedAt             DateTime?
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourcePurchase          Purchase           @relation(fields: [sourcePurchaseId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purchasedAt])
+  @@index([accessStatus])
+}
+
+model ExplanationEntitlement {
+  id                String                       @id @default(cuid())
+  userId            String
+  sourcePurchaseId  String                       @unique
+  reportId          String?
+  assessmentSlug    String?
+  topicKey          String?
+  title             String
+  durationMinutes   Int
+  regionKey         String?
+  currency          String                       @default("INR")
+  amountCents       Int
+  status            ExplanationEntitlementStatus @default(READY_FOR_CONTACT)
+  notes             Json?
+  grantedAt         DateTime?
+  scheduledFor      DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime                     @default(now())
+  updatedAt         DateTime                     @updatedAt
+  user              User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourcePurchase    Purchase                     @relation(fields: [sourcePurchaseId], references: [id], onDelete: Cascade)
+  report            Report?                      @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([reportId])
+  @@index([status])
+  @@index([assessmentSlug])
+}
+
+model ExplanationSession {
+  id                String                   @id @default(cuid())
+  userId            String?
+  reportId          String?
+  assessmentSlug    String?
+  topicKey          String?
+  status            ExplanationSessionStatus @default(PENDING)
+  modelHint         String?
+  requestedSections Json?
+  contextPayload    Json
+  resultPayload     Json?
+  errorPayload      Json?
+  completedAt       DateTime?
+  createdAt         DateTime                 @default(now())
+  updatedAt         DateTime                 @updatedAt
+  user              User?                    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  report            Report?                  @relation(fields: [reportId], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@index([reportId])
+}
+
+model SourceAttribution {
+  id                String              @id @default(cuid())
+  userId            String?
+  assessmentSlug    String?
+  topicKey          String?
+  sourceBlogUrl     String?
+  sourceBlogSlug    String?
+  sourceTopic       String?
+  landingPath       String?
+  referralMedium    String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  countryHint       String?
+  regionHint        String?
+  currencyHint      String?
+  metadata          Json?
+  firstTouchedAt    DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  user              User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  assessmentSessions AssessmentSession[]
+  checkoutIntents    CheckoutIntent[]
+  reports           Report[]
+  purchases         Purchase[]
+
+  @@index([sourceBlogSlug])
+  @@index([assessmentSlug])
+  @@index([sourceTopic])
+}
+
+model EmailDeliveryRecord {
+  id               String          @id @default(cuid())
+  userId           String?
+  reportId         String
+  recipientEmail   String
+  targetType       EmailTargetType
+  status           DeliveryStatus  @default(QUEUED)
+  providerName     String?
+  providerMessageId String?
+  failureReason    String?
+  resendCount      Int             @default(0)
+  lastAttemptedAt  DateTime?
+  sentAt           DateTime?
+  metadata         Json?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  user             User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  report           Report          @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, status])
+  @@index([userId])
+}
+
+model DownloadRecord {
+  id            String   @id @default(cuid())
+  userId        String?
+  reportId      String
+  fileType      String
+  fileVersion   String?
+  sourceContext String?
+  metadata      Json?
+  downloadedAt  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  report        Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId, downloadedAt])
+  @@index([userId])
+}
+
+model OperationalEvent {
+  id               String                 @id @default(cuid())
+  userId           String?
+  reportId         String?
+  purchaseId       String?
+  checkoutIntentId String?
+  eventType        String
+  eventKey         String?
+  level            OperationalEventLevel  @default(INFO)
+  status           OperationalEventStatus
+  message          String
+  metadata         Json?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+  user             User?                  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+  @@index([status, level, createdAt])
+  @@index([userId, createdAt])
+  @@index([reportId, createdAt])
+  @@index([purchaseId, createdAt])
+  @@index([checkoutIntentId, createdAt])
+}
